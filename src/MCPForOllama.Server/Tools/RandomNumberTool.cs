@@ -8,7 +8,7 @@ namespace MCPForOllama.Server.Tools;
 [McpServerToolType]
 public static class RandomNumberTool
 {
-    private static readonly ILogger Logger = Log.ForContext(typeof(RandomNumberTool));
+    private static ILogger Logger => Log.ForContext(typeof(RandomNumberTool));
 
     [McpServerTool, Description("Generates a random integer between min and max (inclusive).")]
     public static int GenerateRandomNumber(

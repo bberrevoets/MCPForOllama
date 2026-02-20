@@ -113,7 +113,7 @@ namespace MCPForOllama.Server.Tools;
 [McpServerToolType]
 public static class MyNewTool
 {
-    private static readonly ILogger Logger = Log.ForContext(typeof(MyNewTool));
+    private static ILogger Logger => Log.ForContext(typeof(MyNewTool));
 
     [McpServerTool, Description("Describe what this tool does.")]
     public static string DoSomething(

@@ -77,7 +77,7 @@ Tested and verified with OpenWebUI running in Docker. Use `host.docker.internal`
 2. Mark the class with `[McpServerToolType]`
 3. Mark public static methods with `[McpServerTool]`
 4. Add `[Description]` attributes to methods and parameters
-5. Add structured logging using `Log.ForContext(typeof(YourTool))`
+5. Add structured logging using a property: `private static ILogger Logger => Log.ForContext(typeof(YourTool));`
 6. The tool is auto-discovered at startup — no changes to `Program.cs` needed
 
 ## Author
