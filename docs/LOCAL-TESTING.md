@@ -12,7 +12,7 @@ dotnet build
 dotnet run --project src/MCPForOllama.Server
 ```
 
-You should see output indicating the server is listening on `http://0.0.0.0:5000`.
+You should see structured Serilog output in the console indicating the server is starting on `http://0.0.0.0:5000`.
 
 ## 2. Verify the Health Endpoint
 
@@ -77,9 +77,41 @@ data: {"result":{"protocolVersion":"2025-03-26","capabilities":{"logging":{},"to
 
 5. The model should call `GenerateRandomNumber` and return the result
 
-## 6. Verify Tool Call in Server Logs
+## 6. Verify Logs
 
-In the terminal where the server is running, you should see log entries for incoming MCP requests when the model calls the tool.
+### Console Logs
+
+In the terminal where the server is running, you should see structured Serilog output for incoming MCP requests and tool invocations, including the service name and source context.
+
+### File Logs
+
+Check the `logs/` directory in the project root for daily rolling log files:
+
+```bash
+ls logs/
+# Example: mcpforollama-20260221.log
+```
+
+### Seq (Optional)
+
+If you have [Seq](https://datalust.co/seq) running locally:
+
+1. Start Seq (default: `http://localhost:5341`)
+2. Open the Seq UI in your browser
+3. Filter by `Service = "MCPForOllama.Server-Dev"` to see all server events
+4. Tool invocations will show structured properties like `Min`, `Max`, and `Result`
+
+To install Seq locally (Docker):
+
+```bash
+docker run --name seq -d --restart unless-stopped -e ACCEPT_EULA=Y -p 5341:80 datalust/seq
+```
+
+If your Seq instance requires an API key, store it via user secrets:
+
+```bash
+dotnet user-secrets set "Serilog:WriteTo:2:Args:apiKey" "YOUR_SEQ_API_KEY" --project src/MCPForOllama.Server
+```
 
 ## Troubleshooting
 
@@ -91,3 +123,5 @@ In the terminal where the server is running, you should see log entries for inco
 | Windows Firewall blocks connection | Allow port 5000 through Windows Firewall: "Allow an app through Windows Firewall" or run `netsh advfirewall firewall add rule name="MCPForOllama" dir=in action=allow protocol=TCP localport=5000` |
 | Model doesn't use the tool | Not all models support tool calling. Try `llama3.1` or `qwen2.5` which have good tool support |
 | Tool appears but isn't called | Try a more explicit prompt like "Use the GenerateRandomNumber tool to give me a number between 1 and 10" |
+| No log files in `logs/` | Ensure the server process has write permissions to the project directory |
+| Seq not receiving events | Verify Seq is running on `http://localhost:5341` and check the API key in user secrets |

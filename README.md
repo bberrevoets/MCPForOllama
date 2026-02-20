@@ -7,6 +7,7 @@ An MCP (Model Context Protocol) server that exposes tools callable by Ollama mod
 - **Streamable HTTP transport** — network-accessible MCP server, no stdio bridge needed
 - **OpenWebUI integration** — connects directly via Admin Panel > Settings > External Tools
 - **Auto-discovery** — new tools are picked up automatically at startup
+- **Structured logging** — Serilog with Console, File, and Seq sinks
 - **Health endpoint** — quick reachability check at `/health`
 
 ### Available Tools
@@ -19,6 +20,7 @@ An MCP (Model Context Protocol) server that exposes tools callable by Ollama mod
 
 - **.NET 10** / C#
 - **ModelContextProtocol.AspNetCore** v0.9.0-preview.1
+- **Serilog** (Console, File, Seq)
 - **xUnit v3** for testing
 
 ## Getting Started
@@ -26,6 +28,7 @@ An MCP (Model Context Protocol) server that exposes tools callable by Ollama mod
 ### Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download) (10.0.103 or later)
+- [Seq](https://datalust.co/seq) (optional, for centralized log viewing)
 
 ### Build & Run
 
@@ -65,6 +68,22 @@ curl http://localhost:5000/health
 
 For detailed step-by-step testing instructions, see [docs/LOCAL-TESTING.md](docs/LOCAL-TESTING.md).
 
+## Logging
+
+The server uses [Serilog](https://serilog.net/) for structured logging with three sinks:
+
+| Sink | Description |
+|------|-------------|
+| **Console** | Structured output with timestamp, level, service name, and source context |
+| **File** | Daily rolling logs in `logs/mcpforollama-YYYYMMDD.log` with 7-day retention |
+| **Seq** | Sends structured events to a [Seq](https://datalust.co/seq) server at `http://localhost:5341` |
+
+All logging configuration is in `appsettings.json`. The Seq API key (if needed) is stored via .NET user secrets:
+
+```bash
+dotnet user-secrets set "Serilog:WriteTo:2:Args:apiKey" "YOUR_SEQ_API_KEY" --project src/MCPForOllama.Server
+```
+
 ### Firewall
 
 If deploying on Ubuntu with ufw active:
@@ -86,16 +105,21 @@ Create a new class in `src/MCPForOllama.Server/Tools/`:
 ```csharp
 using System.ComponentModel;
 using ModelContextProtocol.Server;
+using Serilog;
+using ILogger = Serilog.ILogger;
 
 namespace MCPForOllama.Server.Tools;
 
 [McpServerToolType]
 public static class MyNewTool
 {
+    private static readonly ILogger Logger = Log.ForContext(typeof(MyNewTool));
+
     [McpServerTool, Description("Describe what this tool does.")]
     public static string DoSomething(
         [Description("Describe the parameter.")] string input)
     {
+        Logger.Information("DoSomething invoked with input={Input}", input);
         return $"Result: {input}";
     }
 }
