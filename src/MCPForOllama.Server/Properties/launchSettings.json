@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "MCPForOllama.Server": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "http://0.0.0.0:5000"
+    }
+  }
+}
