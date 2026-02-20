@@ -50,17 +50,33 @@ curl http://localhost:5000/health
 
 ### Connect from OpenWebUI
 
-1. Open **Admin Panel > Settings > External Tools**
-2. Click **Add (+)**
-3. Type: **MCP Streamable HTTP**
-4. URL: `http://<server-ip>:5000/mcp`
+> **Docker note:** If OpenWebUI runs in Docker, use `host.docker.internal` instead of `localhost`.
 
-### Firewall (Ubuntu)
+1. Open **Admin Panel > Settings > External Tools**
+2. Click **+** to add a new connection
+3. Fill in:
+   - **Connection Type:** MCP Streamable HTTP
+   - **URL:** `http://host.docker.internal:5000/mcp` (Docker) or `http://localhost:5000/mcp` (native)
+   - **Auth:** None
+   - **ID:** `mcpforollama`
+   - **Name:** `MCPForOllama`
+   - **Access:** All users
+4. Click **Save**, then click the **refresh icon** next to the URL to verify the connection
+
+For detailed step-by-step testing instructions, see [docs/LOCAL-TESTING.md](docs/LOCAL-TESTING.md).
+
+### Firewall
 
 If deploying on Ubuntu with ufw active:
 
 ```bash
 sudo ufw allow 5000/tcp
+```
+
+On Windows, if the firewall blocks the connection:
+
+```bash
+netsh advfirewall firewall add rule name="MCPForOllama" dir=in action=allow protocol=TCP localport=5000
 ```
 
 ## Adding New Tools
@@ -93,6 +109,8 @@ No changes to `Program.cs` required — tools are auto-discovered at startup.
 MCPForOllama/
 ├── MCPForOllama.slnx
 ├── global.json
+├── docs/
+│   └── LOCAL-TESTING.md
 ├── src/
 │   └── MCPForOllama.Server/
 │       ├── MCPForOllama.Server.csproj

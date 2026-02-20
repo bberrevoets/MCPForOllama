@@ -26,6 +26,8 @@ MCP (Model Context Protocol) server that exposes tools callable by Ollama models
 ```
 MCPForOllama/
 ├── MCPForOllama.slnx                       (solution file)
+├── docs/                                   (documentation)
+│   └── LOCAL-TESTING.md
 ├── src/
 │   └── MCPForOllama.Server/                (ASP.NET Core MCP server)
 │       ├── Program.cs                      (host setup, MCP + health endpoint)
@@ -49,6 +51,10 @@ dotnet test
 
 - `http://0.0.0.0:5000/mcp` — MCP Streamable HTTP endpoint (for OpenWebUI)
 - `http://0.0.0.0:5000/health` — Health check
+
+## OpenWebUI Integration
+
+Tested and verified with OpenWebUI running in Docker. Use `host.docker.internal` instead of `localhost` when connecting from a Docker container. See `docs/LOCAL-TESTING.md` for full setup steps.
 
 ## Adding New Tools
 

@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [0.1.0] - 2026-02-20
 
 ### Added
 
@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - .gitignore for .NET projects
 - global.json pinning .NET SDK to 10.0.103
 - Solution file (`MCPForOllama.slnx`)
+- Local testing guide (`docs/LOCAL-TESTING.md`)
+- Verified working with OpenWebUI (Docker) using `host.docker.internal`
 
 ## [0.0.1] - 2026-02-20
 
