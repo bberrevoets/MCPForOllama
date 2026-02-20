@@ -1,3 +1,4 @@
+using MCPForOllama.Server.Tools;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -15,7 +16,7 @@ try
     builder.Services
         .AddMcpServer()
         .WithHttpTransport()
-        .WithToolsFromAssembly();
+        .WithTools<RandomNumberTool>();
 
     var app = builder.Build();
 

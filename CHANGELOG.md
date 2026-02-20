@@ -15,6 +15,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - Seq integration for centralized log viewing
 - User secrets support for storing Seq API key
 
+### Changed
+- Tools are now instance classes with constructor-injected `ILogger<T>` via DI (instead of static classes with Serilog's `Log.ForContext`)
+- Tool registration uses explicit `.WithTools<T>()` instead of `.WithToolsFromAssembly()`
+
 ### Removed
 - `appsettings.Development.json` — all config now in `appsettings.json` + user secrets
 

@@ -32,7 +32,7 @@ MCPForOllama/
 ├── src/
 │   └── MCPForOllama.Server/                (ASP.NET Core MCP server)
 │       ├── Program.cs                      (host setup, Serilog, MCP + health endpoint)
-│       └── Tools/                          (MCP tool classes, auto-discovered)
+│       └── Tools/                          (MCP tool classes, registered via DI)
 │           └── RandomNumberTool.cs
 └── tests/
     └── MCPForOllama.Server.Tests/          (xUnit v3 tests)
@@ -75,10 +75,10 @@ Tested and verified with OpenWebUI running in Docker. Use `host.docker.internal`
 
 1. Create a new class in `src/MCPForOllama.Server/Tools/`
 2. Mark the class with `[McpServerToolType]`
-3. Mark public static methods with `[McpServerTool]`
-4. Add `[Description]` attributes to methods and parameters
-5. Add structured logging using a property: `private static ILogger Logger => Log.ForContext(typeof(YourTool));`
-6. The tool is auto-discovered at startup — no changes to `Program.cs` needed
+3. Use a primary constructor to inject `ILogger<YourTool>` (and any other dependencies)
+4. Mark public methods with `[McpServerTool]`
+5. Add `[Description]` attributes to methods and parameters
+6. Register the tool in `Program.cs` with `.WithTools<YourTool>()`
 
 ## Author
 

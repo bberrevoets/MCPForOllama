@@ -105,27 +105,31 @@ Create a new class in `src/MCPForOllama.Server/Tools/`:
 ```csharp
 using System.ComponentModel;
 using ModelContextProtocol.Server;
-using Serilog;
-using ILogger = Serilog.ILogger;
 
 namespace MCPForOllama.Server.Tools;
 
 [McpServerToolType]
-public static class MyNewTool
+public class MyNewTool(ILogger<MyNewTool> logger)
 {
-    private static ILogger Logger => Log.ForContext(typeof(MyNewTool));
-
     [McpServerTool, Description("Describe what this tool does.")]
-    public static string DoSomething(
+    public string DoSomething(
         [Description("Describe the parameter.")] string input)
     {
-        Logger.Information("DoSomething invoked with input={Input}", input);
+        logger.LogInformation("DoSomething invoked with input={Input}", input);
         return $"Result: {input}";
     }
 }
 ```
 
-No changes to `Program.cs` required — tools are auto-discovered at startup.
+Then register it in `Program.cs`:
+
+```csharp
+builder.Services
+    .AddMcpServer()
+    .WithHttpTransport()
+    .WithTools<RandomNumberTool>()
+    .WithTools<MyNewTool>();
+```
 
 ## Project Structure
 
