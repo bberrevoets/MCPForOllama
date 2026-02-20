@@ -48,3 +48,4 @@ Desktop.ini
 
 ## Project-specific
 appsettings.*.local.json
+.claude/settings.local.json
