@@ -15,6 +15,7 @@ public class NetatmoApiService(
     private const string AuthorizeUrl = "https://api.netatmo.com/oauth2/authorize";
     private const string TokenUrl = "https://api.netatmo.com/oauth2/token";
     private const string StationDataUrl = "https://api.netatmo.com/api/getstationsdata";
+    private const string MeasureUrl = "https://api.netatmo.com/api/getmeasure";
 
     private readonly NetatmoSettings _settings = options.Value;
 
@@ -85,6 +86,68 @@ public class NetatmoApiService(
         var data = JsonSerializer.Deserialize<NetatmoApiResponse>(json);
 
         return data?.Body.Devices ?? [];
+    }
+
+    public async Task<List<NetatmoMeasureBody>> GetMeasureAsync(
+        string deviceId, string? moduleId = null,
+        string scale = "30min", string type = "Temperature,Humidity",
+        long? dateBegin = null, long? dateEnd = null,
+        int? limit = null, CancellationToken cancellationToken = default)
+    {
+        var tokens = await tokenStore.LoadAsync(cancellationToken)
+            ?? throw new InvalidOperationException(
+                "Netatmo is not authenticated. Please visit http://localhost:5000/netatmo/auth to connect your Netatmo account.");
+
+        if (tokens.IsExpired)
+        {
+            logger.LogInformation("Access token expired, refreshing");
+            tokens = await RefreshTokensAsync(tokens.RefreshToken, cancellationToken);
+        }
+
+        var response = await SendMeasureRequestAsync(
+            tokens.AccessToken, deviceId, moduleId, scale, type, dateBegin, dateEnd, limit, cancellationToken);
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            logger.LogWarning("Got 401 from Netatmo API, attempting token refresh");
+            tokens = await RefreshTokensAsync(tokens.RefreshToken, cancellationToken);
+            response = await SendMeasureRequestAsync(
+                tokens.AccessToken, deviceId, moduleId, scale, type, dateBegin, dateEnd, limit, cancellationToken);
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        var json = await response.Content.ReadAsStringAsync(cancellationToken);
+        var data = JsonSerializer.Deserialize<NetatmoMeasureApiResponse>(json);
+
+        return data?.Body ?? [];
+    }
+
+    private async Task<HttpResponseMessage> SendMeasureRequestAsync(
+        string accessToken, string deviceId, string? moduleId,
+        string scale, string type, long? dateBegin, long? dateEnd,
+        int? limit, CancellationToken cancellationToken)
+    {
+        var parameters = new Dictionary<string, string>
+        {
+            ["device_id"] = deviceId,
+            ["scale"] = scale,
+            ["type"] = type
+        };
+
+        if (moduleId is not null)
+            parameters["module_id"] = moduleId;
+        if (dateBegin.HasValue)
+            parameters["date_begin"] = dateBegin.Value.ToString();
+        if (dateEnd.HasValue)
+            parameters["date_end"] = dateEnd.Value.ToString();
+        if (limit.HasValue)
+            parameters["limit"] = limit.Value.ToString();
+
+        var query = string.Join("&", parameters.Select(p => $"{p.Key}={Uri.EscapeDataString(p.Value)}"));
+        var request = new HttpRequestMessage(HttpMethod.Get, $"{MeasureUrl}?{query}");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        return await httpClient.SendAsync(request, cancellationToken);
     }
 
     private async Task<HttpResponseMessage> SendStationDataRequestAsync(

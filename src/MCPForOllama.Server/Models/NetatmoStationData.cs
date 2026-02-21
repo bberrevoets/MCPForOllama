@@ -16,6 +16,9 @@ public class NetatmoBody
 
 public class NetatmoDevice
 {
+    [JsonPropertyName("_id")]
+    public string Id { get; set; } = string.Empty;
+
     [JsonPropertyName("station_name")]
     public string StationName { get; set; } = string.Empty;
 
@@ -31,6 +34,9 @@ public class NetatmoDevice
 
 public class NetatmoModule
 {
+    [JsonPropertyName("_id")]
+    public string Id { get; set; } = string.Empty;
+
     [JsonPropertyName("module_name")]
     public string ModuleName { get; set; } = string.Empty;
 

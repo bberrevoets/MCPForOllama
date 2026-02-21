@@ -97,17 +97,25 @@ dotnet user-secrets set "Netatmo:ClientSecret" "YOUR_CLIENT_SECRET" --project sr
 
 ### Test via curl
 
-After completing OAuth setup, test the Netatmo tool via the MCP endpoint (use the session ID from step 3):
+After completing OAuth setup, test the Netatmo tools via the MCP endpoint (use the session ID from step 3):
 
 ```bash
+# Get current readings
 curl.exe -s -X POST http://localhost:5000/mcp \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
   -H "Mcp-Session-Id: YOUR_SESSION_ID" \
   -d "{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"tools/call\",\"params\":{\"name\":\"get_temperatures\",\"arguments\":{}}}"
+
+# Get historical data for a specific module
+curl.exe -s -X POST http://localhost:5000/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "Mcp-Session-Id: YOUR_SESSION_ID" \
+  -d "{\"jsonrpc\":\"2.0\",\"id\":5,\"method\":\"tools/call\",\"params\":{\"name\":\"get_historical_data\",\"arguments\":{\"moduleName\":\"Outdoor\",\"hoursBack\":6}}}"
 ```
 
-Expected response:
+Expected response for `get_temperatures`:
 
 ```
 event: message
@@ -156,6 +164,14 @@ For the Netatmo Weather tool (after completing OAuth setup), try:
    > "Show me all temperature and humidity readings"
 
    > "How warm is it outside?"
+
+For the Netatmo Historical Data tool, try:
+
+   > "Show me the temperature history for the Living Room over the last 24 hours"
+
+   > "Give me historical data for the Outdoor module, last 6 hours"
+
+   > "What was the temperature trend in the Bedroom this week?"
 
 > **Important:** After restarting the server or changing tools, always **start a new chat**. Old chats cache stale tool definitions and may not call updated tools correctly.
 

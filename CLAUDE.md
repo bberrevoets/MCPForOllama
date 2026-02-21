@@ -35,7 +35,8 @@ MCPForOllama/
 │       ├── Models/                         (configuration and API response models)
 │       │   ├── NetatmoSettings.cs
 │       │   ├── NetatmoTokens.cs
-│       │   └── NetatmoStationData.cs
+│       │   ├── NetatmoStationData.cs
+│       │   └── NetatmoMeasureData.cs
 │       ├── Services/                       (API clients and token management)
 │       │   ├── INetatmoTokenStore.cs
 │       │   ├── FileNetatmoTokenStore.cs
@@ -85,7 +86,12 @@ dotnet user-secrets set "Serilog:WriteTo:2:Args:apiKey" "YOUR_SEQ_API_KEY" --pro
 
 ## Netatmo Integration
 
-The Netatmo Weather tool requires OAuth2 authentication with the Netatmo API.
+The Netatmo Weather tools require OAuth2 authentication with the Netatmo API.
+
+### Available Netatmo Tools
+
+- **`GetTemperatures`** — current temperature and humidity from all stations/modules
+- **`GetHistoricalData`** — historical temperature and humidity for a specific module over a configurable time range (up to 30 days). Automatically resolves module names, selects appropriate time scale, and formats output with min/max/avg summary.
 
 ### Setup
 

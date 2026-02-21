@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Added
+- Netatmo Historical Data tool (`get_historical_data`) — retrieves historical temperature and humidity for a specific module/room over a configurable time period (up to 30 days)
+  - Automatic module name resolution (case-insensitive) with helpful error messages listing available modules
+  - Auto-scale selection based on time range (30min/1hour/3hours/1day)
+  - Formatted plain-text table output with min/max/avg summary
+- `GetMeasureAsync` method on `INetatmoApiService` / `NetatmoApiService` for Netatmo `getmeasure` API
+- `NetatmoMeasureData.cs` response model (`NetatmoMeasureApiResponse`, `NetatmoMeasureBody`)
+- Device and module ID (`_id`) properties on `NetatmoDevice` and `NetatmoModule` models
+- 25 new tests for historical data tool, measure API service, scale selection, and module resolution
 - Netatmo Weather tool (`get_temperatures`) — reads temperature and humidity from all Netatmo weather stations and modules
 - Netatmo OAuth2 authentication flow with `/netatmo/auth` and `/netatmo/callback` endpoints
 - Token persistence via JSON file with automatic refresh
