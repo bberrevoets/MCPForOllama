@@ -30,17 +30,48 @@ Expected response:
 
 ## 3. Verify the MCP Endpoint
 
-Test the MCP initialize handshake directly:
+Test the MCP initialize handshake directly.
+
+> **Note:** On Windows, use `curl.exe` (not `curl`) to avoid PowerShell's `Invoke-WebRequest` alias which strips the JSON body. Both the `Accept: application/json` and `Accept: text/event-stream` types are required.
 
 ```bash
-curl -s -X POST http://localhost:5000/mcp -H "Content-Type: application/json" -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\",\"capabilities\":{},\"clientInfo\":{\"name\":\"test\",\"version\":\"1.0\"}}}"
+# Step 1: Initialize and get a session ID
+curl.exe -i -s -X POST http://localhost:5000/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\",\"capabilities\":{},\"clientInfo\":{\"name\":\"test\",\"version\":\"1.0\"}}}"
 ```
 
-Expected response (SSE format):
+Look for the `Mcp-Session-Id` header in the response — you'll need it for subsequent requests.
+
+```bash
+# Step 2: Send initialized notification (required before calling tools)
+curl.exe -s -X POST http://localhost:5000/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "Mcp-Session-Id: YOUR_SESSION_ID" \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}"
+
+# Step 3: List available tools (names are snake_case)
+curl.exe -s -X POST http://localhost:5000/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "Mcp-Session-Id: YOUR_SESSION_ID" \
+  -d "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\"}"
+
+# Step 4: Call a tool
+curl.exe -s -X POST http://localhost:5000/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "Mcp-Session-Id: YOUR_SESSION_ID" \
+  -d "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":{\"name\":\"generate_random_number\",\"arguments\":{\"min\":1,\"max\":50}}}"
+```
+
+Expected response for tool call:
 
 ```
 event: message
-data: {"result":{"protocolVersion":"2025-03-26","capabilities":{"logging":{},"tools":{"listChanged":true}},"serverInfo":{"name":"MCPForOllama.Server","version":"1.0.0.0"}},"id":1,"jsonrpc":"2.0"}
+data: {"result":{"content":[{"type":"text","text":"37"}]},"id":3,"jsonrpc":"2.0"}
 ```
 
 ## 4. Connect OpenWebUI to the MCP Server
@@ -65,9 +96,10 @@ data: {"result":{"protocolVersion":"2025-03-26","capabilities":{"logging":{},"to
 ## 5. Test with a Model
 
 1. Open a **New Chat** in OpenWebUI
-2. Select a model that supports tool use (e.g. `llama3.1`, `qwen2.5`, `mistral`)
-3. Make sure the tools toggle is enabled in the chat (look for the tools/wrench icon)
-4. Send a prompt that should trigger the tool, for example:
+2. Select a model that supports tool use (e.g. `qwen2.5`, `qwen3`, `mistral-nemo`)
+3. In the model's **Advanced Parameters**, set **Function Calling** to `Native`
+4. Make sure the tools toggle is enabled in the chat (look for the tools/wrench icon)
+5. Send a prompt that should trigger the tool, for example:
 
    > "Give me a random number between 1 and 50"
 
@@ -75,7 +107,9 @@ data: {"result":{"protocolVersion":"2025-03-26","capabilities":{"logging":{},"to
 
    > "Pick a random number between 200 and 300"
 
-5. The model should call `GenerateRandomNumber` and return the result
+6. The model should call `generate_random_number` and return the result
+
+> **Important:** After restarting the server or changing tools, always **start a new chat**. Old chats cache stale tool definitions and may not call updated tools correctly.
 
 ## 6. Verify Logs
 
@@ -121,7 +155,10 @@ dotnet user-secrets set "Serilog:WriteTo:2:Args:apiKey" "YOUR_SEQ_API_KEY" --pro
 | OpenWebUI "connection failed" (Docker) | Use `http://host.docker.internal:5000/mcp` instead of `http://localhost:5000/mcp`. Docker containers can't reach the host via `localhost` |
 | OpenWebUI "connection failed" (native) | Make sure the server is running and the URL is exactly `http://localhost:5000/mcp` |
 | Windows Firewall blocks connection | Allow port 5000 through Windows Firewall: "Allow an app through Windows Firewall" or run `netsh advfirewall firewall add rule name="MCPForOllama" dir=in action=allow protocol=TCP localport=5000` |
-| Model doesn't use the tool | Not all models support tool calling. Try `llama3.1` or `qwen2.5` which have good tool support |
-| Tool appears but isn't called | Try a more explicit prompt like "Use the GenerateRandomNumber tool to give me a number between 1 and 10" |
+| Model doesn't use the tool | Not all models support tool calling reliably. Use `qwen2.5`, `qwen3`, or `mistral-nemo`. Set **Function Calling** to `Native` in the model's Advanced Parameters |
+| Tool appears but isn't called | Try a more explicit prompt like "Use the generate_random_number tool to give me a number between 1 and 10" |
+| Tool error after server restart | Start a **new chat** in OpenWebUI — old chats cache stale tool definitions |
+| PowerShell `curl` doesn't work | Use `curl.exe` instead of `curl` — PowerShell aliases `curl` to `Invoke-WebRequest` which strips the JSON body |
+| `406 Not Acceptable` from MCP endpoint | Add both content types to Accept header: `-H "Accept: application/json, text/event-stream"` |
 | No log files in `logs/` | Ensure the server process has write permissions to the project directory |
 | Seq not receiving events | Verify Seq is running on `http://localhost:5341` and check the API key in user secrets |

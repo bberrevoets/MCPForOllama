@@ -6,7 +6,7 @@ An MCP (Model Context Protocol) server that exposes tools callable by Ollama mod
 
 - **Streamable HTTP transport** — network-accessible MCP server, no stdio bridge needed
 - **OpenWebUI integration** — connects directly via Admin Panel > Settings > External Tools
-- **Auto-discovery** — new tools are picked up automatically at startup
+- **Dependency injection** — tools are instance classes with constructor-injected services
 - **Structured logging** — Serilog with Console, File, and Seq sinks
 - **Health endpoint** — quick reachability check at `/health`
 
@@ -14,7 +14,7 @@ An MCP (Model Context Protocol) server that exposes tools callable by Ollama mod
 
 | Tool | Description |
 |------|-------------|
-| `GenerateRandomNumber` | Generates a random integer between min and max (inclusive). Defaults to 1–100. |
+| `generate_random_number` | Generates a random number between min and max (inclusive). Defaults to 1–100. Returns a string. |
 
 ## Tech Stack
 
@@ -65,6 +65,11 @@ curl http://localhost:5000/health
    - **Name:** `MCPForOllama`
    - **Access:** All users
 4. Click **Save**, then click the **refresh icon** next to the URL to verify the connection
+5. In the model's **Advanced Parameters**, set **Function Calling** to `Native`
+
+> **Recommended models:** `qwen2.5`, `qwen3`, `mistral-nemo` — these have reliable tool calling support. `llama3.1` may hallucinate tool results instead of invoking them.
+
+> **Important:** After restarting the server or changing tools, always **start a new chat**. Old chats cache stale tool definitions and may not call updated tools correctly.
 
 For detailed step-by-step testing instructions, see [docs/LOCAL-TESTING.md](docs/LOCAL-TESTING.md).
 
@@ -120,6 +125,8 @@ public class MyNewTool(ILogger<MyNewTool> logger)
     }
 }
 ```
+
+**Important:** Always return `string` from tool methods — OpenWebUI expects string results from MCP tools.
 
 Then register it in `Program.cs`:
 

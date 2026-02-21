@@ -78,7 +78,14 @@ Tested and verified with OpenWebUI running in Docker. Use `host.docker.internal`
 3. Use a primary constructor to inject `ILogger<YourTool>` (and any other dependencies)
 4. Mark public methods with `[McpServerTool]`
 5. Add `[Description]` attributes to methods and parameters
-6. Register the tool in `Program.cs` with `.WithTools<YourTool>()`
+6. **Return `string`** — OpenWebUI expects string results from MCP tools
+7. Register the tool in `Program.cs` with `.WithTools<YourTool>()`
+
+## OpenWebUI Model Configuration
+
+- Set **Function Calling** to `Native` in the model's Advanced Parameters
+- Use models with good tool support: `qwen2.5`, `qwen3`, `mistral-nemo`
+- After server restart or tool changes, **start a new chat** — old chats cache stale tool definitions
 
 ## Author
 
