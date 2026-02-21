@@ -16,6 +16,7 @@ An MCP (Model Context Protocol) server that exposes tools callable by Ollama mod
 |------|-------------|
 | `generate_random_number` | Generates a random number between min and max (inclusive). Defaults to 1-100. |
 | `get_temperatures` | Gets current temperature and humidity readings from all Netatmo weather stations and modules. Requires one-time OAuth2 setup. |
+| `get_historical_data` | Gets historical temperature and humidity for a specific module/room over a configurable time period (up to 30 days). Auto-selects time scale and provides min/max/avg summary. |
 
 ## Tech Stack
 
@@ -77,7 +78,7 @@ For detailed step-by-step testing instructions, see [docs/LOCAL-TESTING.md](docs
 
 ## Netatmo Weather Setup
 
-The `get_temperatures` tool reads temperature and humidity from your Netatmo weather stations. It requires a one-time OAuth2 setup.
+The Netatmo tools (`get_temperatures` and `get_historical_data`) read temperature and humidity from your Netatmo weather stations. They require a one-time OAuth2 setup.
 
 ### 1. Create a Netatmo App
 
@@ -184,7 +185,8 @@ MCPForOllama/
 │       ├── Models/
 │       │   ├── NetatmoSettings.cs
 │       │   ├── NetatmoTokens.cs
-│       │   └── NetatmoStationData.cs
+│       │   ├── NetatmoStationData.cs
+│       │   └── NetatmoMeasureData.cs
 │       ├── Services/
 │       │   ├── INetatmoTokenStore.cs
 │       │   ├── FileNetatmoTokenStore.cs
