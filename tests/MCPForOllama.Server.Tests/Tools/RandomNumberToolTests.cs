@@ -11,7 +11,7 @@ public class RandomNumberToolTests
     [Fact]
     public void GenerateRandomNumber_DefaultRange_ReturnsBetween1And100()
     {
-        var result = _tool.GenerateRandomNumber();
+        var result = int.Parse(_tool.GenerateRandomNumber());
 
         Assert.InRange(result, 1, 100);
     }
@@ -19,7 +19,7 @@ public class RandomNumberToolTests
     [Fact]
     public void GenerateRandomNumber_CustomRange_ReturnsBetweenMinAndMax()
     {
-        var result = _tool.GenerateRandomNumber(10, 20);
+        var result = int.Parse(_tool.GenerateRandomNumber(10, 20));
 
         Assert.InRange(result, 10, 20);
     }
@@ -29,7 +29,7 @@ public class RandomNumberToolTests
     {
         var result = _tool.GenerateRandomNumber(42, 42);
 
-        Assert.Equal(42, result);
+        Assert.Equal("42", result);
     }
 
     [Fact]
@@ -45,7 +45,7 @@ public class RandomNumberToolTests
     [Fact]
     public void GenerateRandomNumber_NegativeRange_Works()
     {
-        var result = _tool.GenerateRandomNumber(-50, -10);
+        var result = int.Parse(_tool.GenerateRandomNumber(-50, -10));
 
         Assert.InRange(result, -50, -10);
     }
@@ -56,7 +56,7 @@ public class RandomNumberToolTests
     [InlineData(int.MinValue / 2, int.MinValue / 2)]
     public void GenerateRandomNumber_BoundaryValues_ReturnsBetweenMinAndMax(int min, int max)
     {
-        var result = _tool.GenerateRandomNumber(min, max);
+        var result = int.Parse(_tool.GenerateRandomNumber(min, max));
 
         Assert.InRange(result, min, max);
     }
@@ -66,7 +66,7 @@ public class RandomNumberToolTests
     {
         for (var i = 0; i < 100; i++)
         {
-            var result = _tool.GenerateRandomNumber();
+            var result = int.Parse(_tool.GenerateRandomNumber());
             Assert.InRange(result, 1, 100);
         }
     }

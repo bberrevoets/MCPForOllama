@@ -7,7 +7,7 @@ namespace MCPForOllama.Server.Tools;
 public class RandomNumberTool(ILogger<RandomNumberTool> logger)
 {
     [McpServerTool, Description("Generates a random integer between min and max (inclusive).")]
-    public int GenerateRandomNumber(
+    public string GenerateRandomNumber(
         [Description("The minimum value (inclusive). Defaults to 1.")] int min = 1,
         [Description("The maximum value (inclusive). Defaults to 100.")] int max = 100)
     {
@@ -24,6 +24,6 @@ public class RandomNumberTool(ILogger<RandomNumberTool> logger)
 
         logger.LogInformation("GenerateRandomNumber result: {Result}", result);
 
-        return result;
+        return result.ToString();
     }
 }
