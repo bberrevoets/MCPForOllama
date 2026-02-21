@@ -6,19 +6,21 @@ An MCP (Model Context Protocol) server that exposes tools callable by Ollama mod
 
 - **Streamable HTTP transport** — network-accessible MCP server, no stdio bridge needed
 - **OpenWebUI integration** — connects directly via Admin Panel > Settings > External Tools
-- **Auto-discovery** — new tools are picked up automatically at startup
+- **Dependency injection** — tools are instance classes with constructor-injected services
+- **Structured logging** — Serilog with Console, File, and Seq sinks
 - **Health endpoint** — quick reachability check at `/health`
 
 ### Available Tools
 
 | Tool | Description |
 |------|-------------|
-| `GenerateRandomNumber` | Generates a random integer between min and max (inclusive). Defaults to 1–100. |
+| `generate_random_number` | Generates a random number between min and max (inclusive). Defaults to 1–100. Returns a string. |
 
 ## Tech Stack
 
 - **.NET 10** / C#
 - **ModelContextProtocol.AspNetCore** v0.9.0-preview.1
+- **Serilog** (Console, File, Seq)
 - **xUnit v3** for testing
 
 ## Getting Started
@@ -26,6 +28,7 @@ An MCP (Model Context Protocol) server that exposes tools callable by Ollama mod
 ### Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download) (10.0.103 or later)
+- [Seq](https://datalust.co/seq) (optional, for centralized log viewing)
 
 ### Build & Run
 
@@ -62,8 +65,29 @@ curl http://localhost:5000/health
    - **Name:** `MCPForOllama`
    - **Access:** All users
 4. Click **Save**, then click the **refresh icon** next to the URL to verify the connection
+5. In the model's **Advanced Parameters**, set **Function Calling** to `Native`
+
+> **Recommended models:** `qwen2.5`, `qwen3`, `mistral-nemo` — these have reliable tool calling support. `llama3.1` may hallucinate tool results instead of invoking them.
+
+> **Important:** After restarting the server or changing tools, always **start a new chat**. Old chats cache stale tool definitions and may not call updated tools correctly.
 
 For detailed step-by-step testing instructions, see [docs/LOCAL-TESTING.md](docs/LOCAL-TESTING.md).
+
+## Logging
+
+The server uses [Serilog](https://serilog.net/) for structured logging with three sinks:
+
+| Sink | Description |
+|------|-------------|
+| **Console** | Structured output with timestamp, level, service name, and source context |
+| **File** | Daily rolling logs in `logs/mcpforollama-YYYYMMDD.log` with 7-day retention |
+| **Seq** | Sends structured events to a [Seq](https://datalust.co/seq) server at `http://localhost:5341` |
+
+All logging configuration is in `appsettings.json`. The Seq API key (if needed) is stored via .NET user secrets:
+
+```bash
+dotnet user-secrets set "Serilog:WriteTo:2:Args:apiKey" "YOUR_SEQ_API_KEY" --project src/MCPForOllama.Server
+```
 
 ### Firewall
 
@@ -90,18 +114,29 @@ using ModelContextProtocol.Server;
 namespace MCPForOllama.Server.Tools;
 
 [McpServerToolType]
-public static class MyNewTool
+public class MyNewTool(ILogger<MyNewTool> logger)
 {
     [McpServerTool, Description("Describe what this tool does.")]
-    public static string DoSomething(
+    public string DoSomething(
         [Description("Describe the parameter.")] string input)
     {
+        logger.LogInformation("DoSomething invoked with input={Input}", input);
         return $"Result: {input}";
     }
 }
 ```
 
-No changes to `Program.cs` required — tools are auto-discovered at startup.
+**Important:** Always return `string` from tool methods — OpenWebUI expects string results from MCP tools.
+
+Then register it in `Program.cs`:
+
+```csharp
+builder.Services
+    .AddMcpServer()
+    .WithHttpTransport()
+    .WithTools<RandomNumberTool>()
+    .WithTools<MyNewTool>();
+```
 
 ## Project Structure
 

@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Added
+- Structured logging with Serilog (Console, File, and Seq sinks)
+- Bootstrap logger for capturing startup errors
+- Automatic HTTP request logging via `UseSerilogRequestLogging()`
+- Structured log messages in `RandomNumberTool` (invocation, validation, result)
+- Daily rolling file logs in `logs/` with 7-day retention
+- Seq integration for centralized log viewing
+- User secrets support for storing Seq API key
+
+### Changed
+- Tools are now instance classes with constructor-injected `ILogger<T>` via DI (instead of static classes)
+- Tool registration uses explicit `.WithTools<T>()` instead of `.WithToolsFromAssembly()`
+- `GenerateRandomNumber` returns `string` instead of `int` for OpenWebUI compatibility
+
+### Removed
+- `appsettings.Development.json` — all config now in `appsettings.json` + user secrets
+
 ## [0.1.0] - 2026-02-20
 
 ### Added

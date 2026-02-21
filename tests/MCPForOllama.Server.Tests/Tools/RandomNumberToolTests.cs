@@ -1,14 +1,17 @@
 using MCPForOllama.Server.Tools;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace MCPForOllama.Server.Tests.Tools;
 
 public class RandomNumberToolTests
 {
+    private readonly RandomNumberTool _tool = new(NullLogger<RandomNumberTool>.Instance);
+
     [Fact]
     public void GenerateRandomNumber_DefaultRange_ReturnsBetween1And100()
     {
-        var result = RandomNumberTool.GenerateRandomNumber();
+        var result = int.Parse(_tool.GenerateRandomNumber());
 
         Assert.InRange(result, 1, 100);
     }
@@ -16,7 +19,7 @@ public class RandomNumberToolTests
     [Fact]
     public void GenerateRandomNumber_CustomRange_ReturnsBetweenMinAndMax()
     {
-        var result = RandomNumberTool.GenerateRandomNumber(10, 20);
+        var result = int.Parse(_tool.GenerateRandomNumber(10, 20));
 
         Assert.InRange(result, 10, 20);
     }
@@ -24,16 +27,16 @@ public class RandomNumberToolTests
     [Fact]
     public void GenerateRandomNumber_MinEqualsMax_ReturnsThatValue()
     {
-        var result = RandomNumberTool.GenerateRandomNumber(42, 42);
+        var result = _tool.GenerateRandomNumber(42, 42);
 
-        Assert.Equal(42, result);
+        Assert.Equal("42", result);
     }
 
     [Fact]
     public void GenerateRandomNumber_MinGreaterThanMax_ThrowsArgumentException()
     {
         var ex = Assert.Throws<ArgumentException>(() =>
-            RandomNumberTool.GenerateRandomNumber(100, 1));
+            _tool.GenerateRandomNumber(100, 1));
 
         Assert.Contains("min", ex.Message);
         Assert.Contains("max", ex.Message);
@@ -42,7 +45,7 @@ public class RandomNumberToolTests
     [Fact]
     public void GenerateRandomNumber_NegativeRange_Works()
     {
-        var result = RandomNumberTool.GenerateRandomNumber(-50, -10);
+        var result = int.Parse(_tool.GenerateRandomNumber(-50, -10));
 
         Assert.InRange(result, -50, -10);
     }
@@ -53,7 +56,7 @@ public class RandomNumberToolTests
     [InlineData(int.MinValue / 2, int.MinValue / 2)]
     public void GenerateRandomNumber_BoundaryValues_ReturnsBetweenMinAndMax(int min, int max)
     {
-        var result = RandomNumberTool.GenerateRandomNumber(min, max);
+        var result = int.Parse(_tool.GenerateRandomNumber(min, max));
 
         Assert.InRange(result, min, max);
     }
@@ -63,7 +66,7 @@ public class RandomNumberToolTests
     {
         for (var i = 0; i < 100; i++)
         {
-            var result = RandomNumberTool.GenerateRandomNumber();
+            var result = int.Parse(_tool.GenerateRandomNumber());
             Assert.InRange(result, 1, 100);
         }
     }
