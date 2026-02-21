@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Added
+- Netatmo Weather tool (`get_temperatures`) — reads temperature and humidity from all Netatmo weather stations and modules
+- Netatmo OAuth2 authentication flow with `/netatmo/auth` and `/netatmo/callback` endpoints
+- Token persistence via JSON file with automatic refresh
+- `NetatmoApiService` with typed HttpClient for Netatmo API communication
+- `FileNetatmoTokenStore` for thread-safe token storage with atomic writes
+- Configuration models (`NetatmoSettings`, `NetatmoTokens`, `NetatmoStationData`)
+- 15 new tests for Netatmo tool, API service, and token store
 - Structured logging with Serilog (Console, File, and Seq sinks)
 - Bootstrap logger for capturing startup errors
 - Automatic HTTP request logging via `UseSerilogRequestLogging()`

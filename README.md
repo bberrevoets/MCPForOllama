@@ -14,7 +14,8 @@ An MCP (Model Context Protocol) server that exposes tools callable by Ollama mod
 
 | Tool | Description |
 |------|-------------|
-| `generate_random_number` | Generates a random number between min and max (inclusive). Defaults to 1–100. Returns a string. |
+| `generate_random_number` | Generates a random number between min and max (inclusive). Defaults to 1-100. |
+| `get_temperatures` | Gets current temperature and humidity readings from all Netatmo weather stations and modules. Requires one-time OAuth2 setup. |
 
 ## Tech Stack
 
@@ -29,6 +30,7 @@ An MCP (Model Context Protocol) server that exposes tools callable by Ollama mod
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download) (10.0.103 or later)
 - [Seq](https://datalust.co/seq) (optional, for centralized log viewing)
+- [Netatmo developer app](https://dev.netatmo.com/apps) (for the Netatmo Weather tool)
 
 ### Build & Run
 
@@ -72,6 +74,33 @@ curl http://localhost:5000/health
 > **Important:** After restarting the server or changing tools, always **start a new chat**. Old chats cache stale tool definitions and may not call updated tools correctly.
 
 For detailed step-by-step testing instructions, see [docs/LOCAL-TESTING.md](docs/LOCAL-TESTING.md).
+
+## Netatmo Weather Setup
+
+The `get_temperatures` tool reads temperature and humidity from your Netatmo weather stations. It requires a one-time OAuth2 setup.
+
+### 1. Create a Netatmo App
+
+1. Go to [dev.netatmo.com/apps](https://dev.netatmo.com/apps) and log in
+2. Create a new app
+3. Set the redirect URI to `http://localhost:5000/netatmo/callback`
+4. Note your **Client ID** and **Client Secret**
+
+### 2. Store Credentials
+
+```bash
+dotnet user-secrets set "Netatmo:ClientId" "YOUR_CLIENT_ID" --project src/MCPForOllama.Server
+dotnet user-secrets set "Netatmo:ClientSecret" "YOUR_CLIENT_SECRET" --project src/MCPForOllama.Server
+```
+
+### 3. Authorize
+
+1. Start the server: `dotnet run --project src/MCPForOllama.Server`
+2. Open `http://localhost:5000/netatmo/auth` in your browser
+3. Log in to Netatmo and grant access
+4. You'll see a success message — tokens are stored in `netatmo-tokens.json`
+
+Tokens refresh automatically. You only need to repeat this if the refresh token expires (typically after extended inactivity).
 
 ## Logging
 
@@ -152,13 +181,27 @@ MCPForOllama/
 │       ├── Program.cs
 │       ├── appsettings.json
 │       ├── Properties/launchSettings.json
+│       ├── Models/
+│       │   ├── NetatmoSettings.cs
+│       │   ├── NetatmoTokens.cs
+│       │   └── NetatmoStationData.cs
+│       ├── Services/
+│       │   ├── INetatmoTokenStore.cs
+│       │   ├── FileNetatmoTokenStore.cs
+│       │   ├── INetatmoApiService.cs
+│       │   └── NetatmoApiService.cs
 │       └── Tools/
-│           └── RandomNumberTool.cs
+│           ├── RandomNumberTool.cs
+│           └── NetatmoWeatherTool.cs
 └── tests/
     └── MCPForOllama.Server.Tests/
         ├── MCPForOllama.Server.Tests.csproj
+        ├── Services/
+        │   ├── FileNetatmoTokenStoreTests.cs
+        │   └── NetatmoApiServiceTests.cs
         └── Tools/
-            └── RandomNumberToolTests.cs
+            ├── RandomNumberToolTests.cs
+            └── NetatmoWeatherToolTests.cs
 ```
 
 ## Author

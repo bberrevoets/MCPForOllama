@@ -74,7 +74,47 @@ event: message
 data: {"result":{"content":[{"type":"text","text":"37"}]},"id":3,"jsonrpc":"2.0"}
 ```
 
-## 4. Connect OpenWebUI to the MCP Server
+## 4. Set Up Netatmo Weather Tool (Optional)
+
+If you have Netatmo weather devices, set up the tool to get temperature and humidity readings.
+
+### Prerequisites
+
+1. Create a Netatmo developer app at [dev.netatmo.com/apps](https://dev.netatmo.com/apps)
+2. Set the redirect URI to `http://localhost:5000/netatmo/callback`
+3. Store your credentials:
+
+```bash
+dotnet user-secrets set "Netatmo:ClientId" "YOUR_CLIENT_ID" --project src/MCPForOllama.Server
+dotnet user-secrets set "Netatmo:ClientSecret" "YOUR_CLIENT_SECRET" --project src/MCPForOllama.Server
+```
+
+### Authorize
+
+1. With the server running, open `http://localhost:5000/netatmo/auth` in your browser
+2. Log in to your Netatmo account and grant access
+3. You should see: `{"status":"authenticated","message":"Netatmo tokens stored successfully. You can close this page."}`
+
+### Test via curl
+
+After completing OAuth setup, test the Netatmo tool via the MCP endpoint (use the session ID from step 3):
+
+```bash
+curl.exe -s -X POST http://localhost:5000/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "Mcp-Session-Id: YOUR_SESSION_ID" \
+  -d "{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"tools/call\",\"params\":{\"name\":\"get_temperatures\",\"arguments\":{}}}"
+```
+
+Expected response:
+
+```
+event: message
+data: {"result":{"content":[{"type":"text","text":"Current readings:\n  Home - Indoor: 21.3C, 45% humidity\n  Home - Outdoor: 8.1C, 78% humidity"}]},"id":4,"jsonrpc":"2.0"}
+```
+
+## 5. Connect OpenWebUI to the MCP Server
 
 > **Important:** If OpenWebUI runs in Docker, use `host.docker.internal` instead of `localhost`.
 > Docker containers cannot reach the Windows host via `localhost` — that refers to the container itself.
@@ -93,7 +133,7 @@ data: {"result":{"content":[{"type":"text","text":"37"}]},"id":3,"jsonrpc":"2.0"
 6. Click **Save**
 7. Click the **refresh icon** next to the URL — it should now connect successfully and discover the `GenerateRandomNumber` tool
 
-## 5. Test with a Model
+## 6. Test with a Model
 
 1. Open a **New Chat** in OpenWebUI
 2. Select a model that supports tool use (e.g. `qwen2.5`, `qwen3`, `mistral-nemo`)
@@ -109,9 +149,17 @@ data: {"result":{"content":[{"type":"text","text":"37"}]},"id":3,"jsonrpc":"2.0"
 
 6. The model should call `generate_random_number` and return the result
 
+For the Netatmo Weather tool (after completing OAuth setup), try:
+
+   > "What's the temperature in my house?"
+
+   > "Show me all temperature and humidity readings"
+
+   > "How warm is it outside?"
+
 > **Important:** After restarting the server or changing tools, always **start a new chat**. Old chats cache stale tool definitions and may not call updated tools correctly.
 
-## 6. Verify Logs
+## 7. Verify Logs
 
 ### Console Logs
 
@@ -158,6 +206,9 @@ dotnet user-secrets set "Serilog:WriteTo:2:Args:apiKey" "YOUR_SEQ_API_KEY" --pro
 | Model doesn't use the tool | Not all models support tool calling reliably. Use `qwen2.5`, `qwen3`, or `mistral-nemo`. Set **Function Calling** to `Native` in the model's Advanced Parameters |
 | Tool appears but isn't called | Try a more explicit prompt like "Use the generate_random_number tool to give me a number between 1 and 10" |
 | Tool error after server restart | Start a **new chat** in OpenWebUI — old chats cache stale tool definitions |
+| Netatmo tool returns "not authenticated" | Visit `http://localhost:5000/netatmo/auth` in your browser to complete the OAuth flow |
+| Netatmo OAuth callback fails | Verify your Client ID and Client Secret are correct in user secrets. Check that the redirect URI in your Netatmo app matches `http://localhost:5000/netatmo/callback` |
+| Netatmo returns empty readings | Ensure your Netatmo weather station is online and reporting data in the Netatmo app |
 | PowerShell `curl` doesn't work | Use `curl.exe` instead of `curl` — PowerShell aliases `curl` to `Invoke-WebRequest` which strips the JSON body |
 | `406 Not Acceptable` from MCP endpoint | Add both content types to Accept header: `-H "Accept: application/json, text/event-stream"` |
 | No log files in `logs/` | Ensure the server process has write permissions to the project directory |

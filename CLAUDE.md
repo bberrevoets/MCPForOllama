@@ -31,13 +31,27 @@ MCPForOllama/
 │   └── LOCAL-TESTING.md
 ├── src/
 │   └── MCPForOllama.Server/                (ASP.NET Core MCP server)
-│       ├── Program.cs                      (host setup, Serilog, MCP + health endpoint)
+│       ├── Program.cs                      (host setup, Serilog, MCP + OAuth endpoints)
+│       ├── Models/                         (configuration and API response models)
+│       │   ├── NetatmoSettings.cs
+│       │   ├── NetatmoTokens.cs
+│       │   └── NetatmoStationData.cs
+│       ├── Services/                       (API clients and token management)
+│       │   ├── INetatmoTokenStore.cs
+│       │   ├── FileNetatmoTokenStore.cs
+│       │   ├── INetatmoApiService.cs
+│       │   └── NetatmoApiService.cs
 │       └── Tools/                          (MCP tool classes, registered via DI)
-│           └── RandomNumberTool.cs
+│           ├── RandomNumberTool.cs
+│           └── NetatmoWeatherTool.cs
 └── tests/
     └── MCPForOllama.Server.Tests/          (xUnit v3 tests)
+        ├── Services/
+        │   ├── FileNetatmoTokenStoreTests.cs
+        │   └── NetatmoApiServiceTests.cs
         └── Tools/
-            └── RandomNumberToolTests.cs
+            ├── RandomNumberToolTests.cs
+            └── NetatmoWeatherToolTests.cs
 ```
 
 ## Build & Run
@@ -52,6 +66,8 @@ dotnet test
 
 - `http://0.0.0.0:5000/mcp` — MCP Streamable HTTP endpoint (for OpenWebUI)
 - `http://0.0.0.0:5000/health` — Health check
+- `http://0.0.0.0:5000/netatmo/auth` — Starts Netatmo OAuth2 flow (one-time setup)
+- `http://0.0.0.0:5000/netatmo/callback` — OAuth2 callback (receives authorization code)
 
 ## Logging
 
@@ -66,6 +82,24 @@ Configuration lives in `appsettings.json`. Seq API key is stored via .NET user s
 ```bash
 dotnet user-secrets set "Serilog:WriteTo:2:Args:apiKey" "YOUR_SEQ_API_KEY" --project src/MCPForOllama.Server
 ```
+
+## Netatmo Integration
+
+The Netatmo Weather tool requires OAuth2 authentication with the Netatmo API.
+
+### Setup
+
+1. Register an app at [dev.netatmo.com](https://dev.netatmo.com/apps)
+2. Set the redirect URI to `http://localhost:5000/netatmo/callback`
+3. Store credentials via user secrets:
+
+```bash
+dotnet user-secrets set "Netatmo:ClientId" "YOUR_CLIENT_ID" --project src/MCPForOllama.Server
+dotnet user-secrets set "Netatmo:ClientSecret" "YOUR_CLIENT_SECRET" --project src/MCPForOllama.Server
+```
+
+4. Start the server and navigate to `http://localhost:5000/netatmo/auth` in your browser
+5. Authorize the app — tokens are stored in `netatmo-tokens.json` and refresh automatically
 
 ## OpenWebUI Integration
 
